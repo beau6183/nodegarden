@@ -35,7 +35,7 @@
     wArea = wWidth * wHeight;
 
     // calculate nodes needed
-    nodes.length = Math.sqrt(wArea) | 0;
+    nodes.length = Math.sqrt(wArea / 72) | 0;
 
     // set canvas size
     canvas.width = wWidth;
@@ -63,7 +63,7 @@
     var force;
     var xForce, yForce;
     var xDistance, yDistance, maxDistance;
-    var i, j, nodeA, nodeB, len, radA, radB;
+    var i, j, nodeA, nodeB, node, len, radA, radB, impactAngle, vLoss;
 
     // request new animationFrame
     requestAnimationFrame(render);
@@ -89,8 +89,13 @@
           if (nodeA.m <= nodeB.m) {
             nodeA.x = Math.random() * wWidth;
             nodeA.y = Math.random() * wHeight;
+
+            nodeB.vx += nodeA.vx * (nodeA.m / nodeB.m);
+            nodeB.vy += nodeA.vy * (nodeA.m / nodeB.m);
+
             nodeA.vx = Math.random() * 1 - 0.5;
             nodeA.vy = Math.random() * 1 - 0.5;
+
             // Combine volumes
             nodeB.m += nodeA.m;
             console.log("Annihilation A->B", nodeB.m);
@@ -101,6 +106,10 @@
           if (nodeB.m <= nodeA.m) {
             nodeB.x = Math.random() * wWidth;
             nodeB.y = Math.random() * wHeight;
+
+            nodeA.vx += nodeB.vx * (nodeB.m / nodeA.m);
+            nodeA.vy += nodeB.vy * (nodeB.m / nodeA.m);
+
             nodeB.vx = Math.random() * 1 - 0.5;
             nodeB.vy = Math.random() * 1 - 0.5;
             // Combine volumes
@@ -112,7 +121,7 @@
           continue;
         }
 
-        maxDistance = (radA + radB) * 2;
+        maxDistance = radA * 5 + radB * 5;
         if (distance > maxDistance) {
           continue;
         }
@@ -142,31 +151,61 @@
         yForce = force * direction.y;
 
         // calculate new velocity after gravity
-        nodeA.vx += xForce;
-        nodeA.vy += yForce;
-        nodeB.vx -= xForce;
-        nodeB.vy -= yForce;
+        nodeA.vx += nodeB.m / nodeA.m * xForce;
+        nodeA.vy += nodeB.m / nodeA.m * yForce;
+        nodeB.vx -= nodeA.m / nodeB.m * xForce;
+        nodeB.vy -= nodeA.m / nodeB.m * yForce;
       }
     }
     // update nodes
     for (i = 0, len = nodes.length; i < len; i++) {
+      node = nodes[i];
       ctx.beginPath();
       // treat as spheres
-      ctx.fillStyle = 'rgba(' + Math.min(255, nodes[i].m / 5) + ', 0, 0, 1)';
-      ctx.arc(nodes[i].x, nodes[i].y, Math.pow(3 * nodes[i].m / (4 * Math.PI), 1 / 3), 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(' + Math.min(255, node.m / 10) + ', 0, 0, 1)';
+      ctx.arc(node.x, node.y, Math.pow(3 * node.m / (4 * Math.PI), 1 / 3), 0, 2 * Math.PI);
       ctx.fill();
 
-      nodes[i].x += nodes[i].vx;
-      nodes[i].y += nodes[i].vy;
+      node.x += node.vx;
+      node.y += node.vy;
 
-      if (nodes[i].x > wWidth + 25 || nodes[i].x < -25 || nodes[i].y > wHeight + 25 || nodes[i].y < -25) {
-        // if node over screen limits - reset to a init position
-        nodes[i].x = Math.random() * wWidth;
-        nodes[i].y = Math.random() * wHeight;
-        nodes[i].vx = Math.random() * 1 - 0.5;
-        nodes[i].vy = Math.random() * 1 - 0.5;
-        nodes[i].m = 10;
+      if (node.x <= 0) {
+        impactAngle = impactLoss(node.vx, node.vy, true);
+        vLoss = 1 - 0.5 * impactAngle;
+        node.x = 0;
+        node.vx *= -vLoss;
+        node.vy *= vLoss;
+        node.y += node.vy;
+      } else if (node.x >= wWidth) {
+        impactAngle = impactLoss(node.vx, node.vy, true);
+        vLoss = 1 - 0.5 * impactAngle;
+        node.x = wWidth;
+        node.vx *= -vLoss;
+        node.vy *= vLoss;
+        node.y += node.vy;
+      }
+
+      if (node.y <= 0) {
+        impactAngle = impactLoss(node.vx, node.vy, false);
+        vLoss = 1 - 0.5 * impactAngle;
+        node.y = 0;
+        node.vy *= -vLoss;
+        node.vx *= vLoss;
+        node.x += node.vx;
+      } else if (node.y >= wHeight) {
+        impactAngle = impactLoss(node.vx, node.vy, false);
+        vLoss = 1 - 0.5 * impactAngle;
+        node.y = wHeight;
+        node.vy *= -vLoss;
+        node.vx *= vLoss;
+        node.x += node.vx;
       }
     }
+  }
+
+  function impactLoss(dX, dY, vertical) {
+    var degs = Math.abs(Math.atan(dY / dX)) * (180 / Math.PI);
+    if (vertical) degs = 90 - degs;
+    return degs / 90;
   }
 })();
