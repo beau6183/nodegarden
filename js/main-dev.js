@@ -12,7 +12,8 @@
 
   var canvas = document.createElement('canvas');
   var ctx = canvas.getContext('2d');
-
+  var initialMass = 10;
+  var criticalMass = 10000;
   var $container = document.getElementById('container');
 
   if (pixelRatio !== 1) {
@@ -35,7 +36,7 @@
     wArea = wWidth * wHeight;
 
     // calculate nodes needed
-    nodes.length = Math.sqrt(wArea) / 25 | 0;
+    nodes.length = Math.sqrt(wArea / 72) | 0;
 
     // set canvas size
     canvas.width = wWidth;
@@ -52,9 +53,7 @@
         y: Math.random() * wHeight,
         vx: Math.random() * 1 - 0.5,
         vy: Math.random() * 1 - 0.5,
-        m: Math.random() * 1.5 + 1,
-        link: null,
-        pos: false
+        m: initialMass
       };
     }
   }
@@ -64,8 +63,8 @@
     var direction;
     var force;
     var xForce, yForce;
-    var xDistance, yDistance;
-    var i, j, nodeA, nodeB, len;
+    var xDistance, yDistance, maxDistance;
+    var i, j, nodeA, nodeB, node, len, radA, radB, impactAngle, vLoss;
 
     // request new animationFrame
     requestAnimationFrame(render);
@@ -78,36 +77,55 @@
       for (j = i + 1; j < len + 1; j++) {
         nodeA = nodes[i];
         nodeB = nodes[j];
+        radA = Math.pow(3 * nodeA.m / (4 * Math.PI), 1 / 3);
+        radB = Math.pow(3 * nodeB.m / (4 * Math.PI), 1 / 3);
         xDistance = nodeB.x - nodeA.x;
         yDistance = nodeB.y - nodeA.y;
 
         // calculate distance
         distance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
 
-        if (distance < nodeA.m / 2 + nodeB.m / 2) {
+        if (distance < radA + radB) {
           // collision: remove smaller or equal
           if (nodeA.m <= nodeB.m) {
             nodeA.x = Math.random() * wWidth;
             nodeA.y = Math.random() * wHeight;
+
+            nodeB.vx += nodeA.vx * (nodeA.m / nodeB.m);
+            nodeB.vy += nodeA.vy * (nodeA.m / nodeB.m);
+
             nodeA.vx = Math.random() * 1 - 0.5;
             nodeA.vy = Math.random() * 1 - 0.5;
-            nodeA.m = Math.random() * 1.5 + 1;
+
+            // Combine volumes
+            nodeB.m += nodeA.m;
+            if (nodeB.m > criticalMass) nodeB.m = initialMass;
+            radB = Math.pow(3 * nodeB.m / (4 * Math.PI), 1 / 3);
+            nodeA.m = initialMass;
           }
 
           if (nodeB.m <= nodeA.m) {
             nodeB.x = Math.random() * wWidth;
             nodeB.y = Math.random() * wHeight;
+
+            nodeA.vx += nodeB.vx * (nodeB.m / nodeA.m);
+            nodeA.vy += nodeB.vy * (nodeB.m / nodeA.m);
+
             nodeB.vx = Math.random() * 1 - 0.5;
             nodeB.vy = Math.random() * 1 - 0.5;
-            nodeB.m = Math.random() * 1.5 + 1;
+            // Combine volumes
+            nodeA.m += nodeB.m;
+            if (nodeA.m > criticalMass) nodeA.m = initialMass;
+            radA = Math.pow(3 * nodeA.m / (4 * Math.PI), 1 / 3);
+            nodeB.m = initialMass;
           }
           continue;
         }
 
-        if (distance > 200) {
-          // distance over 200 pixels - ignore gravity
-          continue;
-        }
+        // maxDistance = radA * 5 + radB * 5
+        // if (distance > maxDistance) {
+        //   continue
+        // }
 
         // calculate gravity direction
         direction = {
@@ -116,55 +134,83 @@
         };
 
         // calculate gravity force
-        force = 10 * nodeA.m * nodeB.m / Math.pow(distance, 2);
+        force = 0.6e-3 * (nodeA.m * nodeB.m) / Math.pow(distance, 2);
 
-        if (force > 0.025) {
+        if (isNaN(force) || force < 0.0000000000025) {
+          continue;
+        } else if (force > 0.025) {
           // cap force to a maximum value of 0.025
           force = 0.025;
         }
 
-        // draw gravity lines
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(63,63,63,' + force * 40 + ')';
-        ctx.moveTo(nodeA.x, nodeA.y);
-        ctx.lineTo(nodeB.x, nodeB.y);
-        ctx.stroke();
+        if (force * 40 >= 0.01) {
+          // draw gravity lines
+          ctx.beginPath();
+          ctx.strokeStyle = 'rgba(0,0,255,' + force * 40 + ')';
+          ctx.moveTo(nodeA.x, nodeA.y);
+          ctx.lineTo(nodeB.x, nodeB.y);
+          ctx.stroke();
+        }
 
         xForce = force * direction.x;
         yForce = force * direction.y;
 
         // calculate new velocity after gravity
-        if (nodeA.pos !== nodeB.pos) {
-          nodeA.vx -= xForce;
-          nodeA.vy -= yForce;
-
-          nodeB.vx += xForce;
-          nodeB.vy += yForce;
-        } else {
-          nodeA.vx += xForce;
-          nodeA.vy += yForce;
-
-          nodeB.vx -= xForce;
-          nodeB.vy -= yForce;
-        }
+        nodeA.vx += nodeB.m / nodeA.m * xForce;
+        nodeA.vy += nodeB.m / nodeA.m * yForce;
+        nodeB.vx -= nodeA.m / nodeB.m * xForce;
+        nodeB.vy -= nodeA.m / nodeB.m * yForce;
       }
     }
     // update nodes
     for (i = 0, len = nodes.length; i < len; i++) {
+      node = nodes[i];
       ctx.beginPath();
-      ctx.arc(nodes[i].x, nodes[i].y, nodes[i].m, 0, 2 * Math.PI);
+      // treat as spheres
+      ctx.fillStyle = 'rgba(' + Math.floor(255 * (node.m / criticalMass)) + ', 0, 0, 1)';
+      ctx.arc(node.x, node.y, Math.pow(3 * node.m / (4 * Math.PI), 1 / 3), 0, 2 * Math.PI);
       ctx.fill();
 
-      nodes[i].x += nodes[i].vx;
-      nodes[i].y += nodes[i].vy;
+      node.x += node.vx;
+      node.y += node.vy;
 
-      if (nodes[i].x > wWidth + 25 || nodes[i].x < -25 || nodes[i].y > wHeight + 25 || nodes[i].y < -25) {
-        // if node over screen limits - reset to a init position
-        nodes[i].x = Math.random() * wWidth;
-        nodes[i].y = Math.random() * wHeight;
-        nodes[i].vx = Math.random() * 1 - 0.5;
-        nodes[i].vy = Math.random() * 1 - 0.5;
+      if (node.x <= 0) {
+        impactAngle = impactLoss(node.vx, node.vy, true);
+        vLoss = 1 - 0.5 * impactAngle;
+        node.x = 0;
+        node.vx *= -vLoss;
+        node.vy *= vLoss;
+        node.y += node.vy;
+      } else if (node.x >= wWidth) {
+        impactAngle = impactLoss(node.vx, node.vy, true);
+        vLoss = 1 - 0.5 * impactAngle;
+        node.x = wWidth;
+        node.vx *= -vLoss;
+        node.vy *= vLoss;
+        node.y += node.vy;
+      }
+
+      if (node.y <= 0) {
+        impactAngle = impactLoss(node.vx, node.vy, false);
+        vLoss = 1 - 0.5 * impactAngle;
+        node.y = 0;
+        node.vy *= -vLoss;
+        node.vx *= vLoss;
+        node.x += node.vx;
+      } else if (node.y >= wHeight) {
+        impactAngle = impactLoss(node.vx, node.vy, false);
+        vLoss = 1 - 0.5 * impactAngle;
+        node.y = wHeight;
+        node.vy *= -vLoss;
+        node.vx *= vLoss;
+        node.x += node.vx;
       }
     }
+  }
+
+  function impactLoss(dX, dY, vertical) {
+    var degs = Math.abs(Math.atan(dY / dX)) * (180 / Math.PI);
+    if (vertical) degs = 90 - degs;
+    return degs / 90;
   }
 })();
