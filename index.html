@@ -1,35 +1,57 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta property="og:title" content="HTML5 Node Garden">
-    <meta property="og:url" content="https://pakastin.github.io/nodegarden">
-    <meta property="og:image" content="https://pakastin.github.io/nodegarden/img/fb.png">
-    <meta property="og:description" content="Really simple node garden made with HTML5. No Barnes-Hut n-body optimization, just simple physics.">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:creator" content="@pakastin">
-    <meta name="twitter:title" content="HTML5 Node Garden">
-    <meta name="twitter:description" content="Really simple node garden made with HTML5. No Barnes-Hut n-body optimization, just simple physics.">
-    <meta name="twitter:image" content="https://pakastin.github.io/img/twitter.png">
-    <title>HTML5 Node Garden</title>
-    <link rel="stylesheet" href="css/main.css">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Nodegarden by beau6183</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
   </head>
   <body>
-    <div id="container"></div>
-    <a href="https://github.com/pakastin/nodegarden">
-      <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png">
-    </a>
-    <script src="js/main.js"></script>
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    <div class="wrapper">
+      <header>
+        <h1>Nodegarden</h1>
+        <p>Node Garden</p>
 
-      ga('create', 'UA-54216829-4', 'auto');
-      ga('send', 'pageview');
-    </script>
+        <p class="view"><a href="https://github.com/beau6183/nodegarden">View the Project on GitHub <small>beau6183/nodegarden</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/beau6183/nodegarden/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/beau6183/nodegarden/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/beau6183/nodegarden">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="html5-node-garden" class="anchor" href="#html5-node-garden" aria-hidden="true"><span class="octicon octicon-link"></span></a>HTML5 Node Garden</h1>
+
+<p><a href="https://pakastin.github.io/nodegarden">https://pakastin.github.io/nodegarden</a></p>
+
+<p>Really simple node garden made with HTML5. No Barnes-Hut n-body optimization, just <a href="https://github.com/pakastin/nodegarden/blob/master/scripts/index.js#L115">simple physics</a>.</p>
+
+<ul>
+<li>Circles represent nodes</li>
+<li>Node's mass is proportional to it's size</li>
+<li>Lines visualize the gravitational force between nodes</li>
+<li>Line opacity equals to the strength of force</li>
+<li>When two nodes collide, smaller one will reset to a new location and size</li>
+<li>When node travels over screen limits it will reset to a new location and size</li>
+</ul>
+
+<p>Also check out my other projects: <a href="https://deck-of-cards.js.org">https://deck-of-cards.js.org</a> and <a href="https://frzr.js.org">https://frzr.js.org</a></p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/beau6183">beau6183</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
   </body>
 </html>
