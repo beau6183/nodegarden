@@ -8,7 +8,7 @@ var nodes = new Array(Math.sqrt(wArea) / 10 | 0)
 
 var canvas = document.createElement('canvas')
 var ctx = canvas.getContext('2d')
-
+var initialMass = 10, criticalMass = 10000
 var $container = document.getElementById('container')
 
 if (pixelRatio !== 1) {
@@ -48,7 +48,7 @@ function init () {
       y: Math.random() * wHeight,
       vx: Math.random() * 1 - 0.5,
       vy: Math.random() * 1 - 0.5,
-      m: 10
+      m: initialMass
     }
   }
 }
@@ -94,9 +94,9 @@ function render () {
           
           // Combine volumes
           nodeB.m += nodeA.m
-          if (nodeB.m > 10000) nodeB.m = 10;
+          if (nodeB.m > criticalMass) nodeB.m = initialMass;
           radB = Math.pow((3 * nodeB.m) / (4 * Math.PI), 1/3)
-          nodeA.m = 10
+          nodeA.m = initialMass
         }
 
         if (nodeB.m <= nodeA.m) {
@@ -110,9 +110,9 @@ function render () {
           nodeB.vy = Math.random() * 1 - 0.5
           // Combine volumes
           nodeA.m += nodeB.m
-          if (nodeA.m > 100000) nodeA.m = 10;
+          if (nodeA.m > criticalMass) nodeA.m = initialMass;
           radA = Math.pow((3 * nodeA.m) / (4 * Math.PI), 1/3)
-          nodeB.m = 10
+          nodeB.m = initialMass
         }
         continue
       }
@@ -162,7 +162,7 @@ function render () {
     node = nodes[i]
     ctx.beginPath()
     // treat as spheres
-    ctx.fillStyle = 'rgba(' + Math.min(255, node.m / 10) + ', 0, 0, 1)' 
+    ctx.fillStyle = 'rgba(' + Math.floor(255 * (node.m / criticalMass)) + ', 0, 0, 1)' 
     ctx.arc(node.x, node.y, Math.pow((3 * node.m) / (4 * Math.PI), 1 / 3), 0, 2 * Math.PI)
     ctx.fill()
 
