@@ -98,7 +98,7 @@
 
             // Combine volumes
             nodeB.m += nodeA.m;
-            console.log("Annihilation A->B", nodeB.m);
+            if (nodeB.m > 10000) nodeB.m = 10;
             radB = Math.pow(3 * nodeB.m / (4 * Math.PI), 1 / 3);
             nodeA.m = 10;
           }
@@ -114,17 +114,17 @@
             nodeB.vy = Math.random() * 1 - 0.5;
             // Combine volumes
             nodeA.m += nodeB.m;
+            if (nodeA.m > 100000) nodeA.m = 10;
             radA = Math.pow(3 * nodeA.m / (4 * Math.PI), 1 / 3);
-            console.log("Annihilation B->A", nodeA.m);
             nodeB.m = 10;
           }
           continue;
         }
 
-        maxDistance = radA * 5 + radB * 5;
-        if (distance > maxDistance) {
-          continue;
-        }
+        // maxDistance = radA * 5 + radB * 5
+        // if (distance > maxDistance) {
+        //   continue
+        // }
 
         // calculate gravity direction
         direction = {
@@ -133,19 +133,23 @@
         };
 
         // calculate gravity force
-        force = nodeA.m * nodeB.m / Math.pow(distance, 2);
+        force = 0.6e-3 * (nodeA.m * nodeB.m) / Math.pow(distance, 2);
 
-        if (force > 0.025) {
+        if (isNaN(force) || force < 0.0000000000025) {
+          continue;
+        } else if (force > 0.025) {
           // cap force to a maximum value of 0.025
           force = 0.025;
         }
 
-        // draw gravity lines
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(0,0,255,' + force * 40 + ')';
-        ctx.moveTo(nodeA.x, nodeA.y);
-        ctx.lineTo(nodeB.x, nodeB.y);
-        ctx.stroke();
+        if (force * 40 >= 0.01) {
+          // draw gravity lines
+          ctx.beginPath();
+          ctx.strokeStyle = 'rgba(0,0,255,' + force * 40 + ')';
+          ctx.moveTo(nodeA.x, nodeA.y);
+          ctx.lineTo(nodeB.x, nodeB.y);
+          ctx.stroke();
+        }
 
         xForce = force * direction.x;
         yForce = force * direction.y;
