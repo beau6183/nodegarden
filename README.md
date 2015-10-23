@@ -1,14 +1,14 @@
 # HTML5 Node Garden
 
-https://pakastin.github.io/nodegarden
+https://beau6183.github.io/nodegarden
 
-Really simple node garden made with HTML5. No Barnes-Hut n-body optimization, just [simple physics](https://github.com/pakastin/nodegarden/blob/master/scripts/index.js#L115).
+Really simple node garden made with HTML5 (based on https://pakastin.github.io/nodegarden). I've made the following changes.
 
-- Circles represent nodes
-- Node's mass is proportional to it's size
-- Lines visualize the gravitational force between nodes
-- Line opacity equals to the strength of force
-- When two nodes collide, smaller one will reset to a new location and size
-- When node travels over screen limits it will reset to a new location and size
-
-Also check out my other projects: https://deck-of-cards.js.org and https://frzr.js.org
+- More nodes!
+- Walls now rebound nodes (with momentum loss based on impact angle)
+- Node color intensifies as it reaches critical
+- When two nodes collide, the mass of the smaller one is transfered to the larger one, and the larger's trajectory is altered. The inhillated node resets and respawns randomly
+- Force lines are removed, motion blur added
+- Uses a more-realistic gravity, though still stronger than real gravity, using 0.6e-3 as G, rather than 1
+- Nodes now affect eachother with mass-proportional force as they pass near by.
+- Nodes are rendered based on a spherical circumfrence using their mass with a volume of 1
