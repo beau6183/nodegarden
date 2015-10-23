@@ -64,14 +64,15 @@
     var force;
     var xForce, yForce;
     var xDistance, yDistance, maxDistance;
-    var i, j, nodeA, nodeB, node, len, radA, radB, impactAngle, vLoss;
+    var i, j, nodeA, nodeB, node, len, radA, radB, impactAngle, vLoss, lineStyle;
 
     // request new animationFrame
     requestAnimationFrame(render);
 
     // clear canvas
-    ctx.clearRect(0, 0, wWidth, wHeight);
-
+    //ctx.clearRect(0, 0, wWidth, wHeight)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)'; // motion blur amount is 10 % (1 - 0.9 = 0.1)
+    ctx.fillRect(0, 0, wWidth, wHeight);
     // update links
     for (i = 0, len = nodes.length - 1; i < len; i++) {
       for (j = i + 1; j < len + 1; j++) {
@@ -134,7 +135,7 @@
         };
 
         // calculate gravity force
-        force = 0.6e-3 * (nodeA.m * nodeB.m) / Math.pow(distance, 2);
+        force = 0.6e-3 * (nodeA.m * nodeB.m / Math.pow(distance, 2));
 
         if (isNaN(force) || force < 0.0000000000025) {
           continue;
@@ -143,14 +144,14 @@
           force = 0.025;
         }
 
-        if (force * 40 >= 0.01) {
-          // draw gravity lines
-          ctx.beginPath();
-          ctx.strokeStyle = 'rgba(0,0,255,' + force * 40 + ')';
-          ctx.moveTo(nodeA.x, nodeA.y);
-          ctx.lineTo(nodeB.x, nodeB.y);
-          ctx.stroke();
-        }
+        // if (force * 40 >= 0.01) {
+        //   // draw gravity lines
+        //   ctx.beginPath()
+        //   ctx.strokeStyle = 'rgba(0,0,0,' + force * 40 + ')'
+        //   ctx.moveTo(nodeA.x, nodeA.y)
+        //   ctx.lineTo(nodeB.x, nodeB.y)
+        //   ctx.stroke()
+        // }
 
         xForce = force * direction.x;
         yForce = force * direction.y;
