@@ -15,6 +15,7 @@
   var initialMass = 10;
   var criticalMass = 10000;
   var $container = document.getElementById('container');
+  $container.addEventListener('click', canvas_clickHandler);
 
   if (pixelRatio !== 1) {
     // if retina screen, scale canvas
@@ -29,6 +30,30 @@
   render();
 
   window.addEventListener('resize', init);
+
+  function canvas_clickHandler(event) {
+    var p = {
+      x: pixelRatio * event.clientX,
+      y: pixelRatio * event.clientY
+    };
+    function contains(n) {
+      var rad = Math.pow(3 * n.m / (4 * Math.PI), 1 / 3),
+          box = {
+        x: n.x - rad,
+        y: n.y - rad,
+        w: 2 * rad,
+        h: 2 * rad
+      };
+      return p.x >= box.x && p.x <= box.x + box.w && p.y >= box.y && p.y <= box.y + box.h;
+    }
+    nodes.some(function (n) {
+      if (contains(n)) {
+        n.m *= 2;
+        return true;
+      }
+      return false;
+    });
+  }
 
   function init() {
     wWidth = window.innerWidth * pixelRatio;
@@ -63,15 +88,15 @@
     var direction;
     var force;
     var xForce, yForce;
-    var xDistance, yDistance, maxDistance;
-    var i, j, nodeA, nodeB, node, len, radA, radB, impactAngle, vLoss, lineStyle;
+    var xDistance, yDistance;
+    var i, j, nodeA, nodeB, node, len, radA, radB, impactAngle, vLoss;
 
     // request new animationFrame
     requestAnimationFrame(render);
 
     // clear canvas
     //ctx.clearRect(0, 0, wWidth, wHeight)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)'; // motion blur amount is 10 % (1 - 0.9 = 0.1)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'; // motion blur amount is 10 % (1 - 0.9 = 0.1)
     ctx.fillRect(0, 0, wWidth, wHeight);
     // update links
     for (i = 0, len = nodes.length - 1; i < len; i++) {
@@ -135,13 +160,10 @@
         };
 
         // calculate gravity force
-        force = 0.6e-3 * (nodeA.m * nodeB.m / Math.pow(distance, 2));
+        force = 6.67408e-5 * (nodeA.m * nodeB.m / Math.pow(distance, 2));
 
-        if (isNaN(force) || force < 0.0000000000025) {
+        if (isNaN(force)) {
           continue;
-        } else if (force > 0.025) {
-          // cap force to a maximum value of 0.025
-          force = 0.025;
         }
 
         // if (force * 40 >= 0.01) {
