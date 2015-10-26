@@ -1,11 +1,11 @@
 /// <reference path="./shared-components.ts"/>
 
-class SpaceController {
+class NBodyController {
 	
 	public G:number = 6.67408e-5;
 	
 	public initialMass:number = 10;
-	public criticalMass:number = 10000;
+	public criticalMass:number = 1000000;
 	
 	public get windowArea():number {
 		return this.windowWidth * this.windowHeight;
@@ -31,10 +31,6 @@ class SpaceController {
 		return this.windowWidth * this.pixelRatio;
 	}
 	
-	public get nodeCount():number {
-		return Math.sqrt((this.scaledHeight * this.scaledWidth) / 72) | 0;
-	}
-	
 	private nodes:Array<Nodule>;
 	
 	private ctx:CanvasRenderingContext2D;
@@ -54,8 +50,13 @@ class SpaceController {
 			this.canvas.style.transformOrigin = '0 0';
 		}
 		this.container.appendChild(this.canvas);
-		
-		this.nodes = new Array(this.nodeCount);
+		let n = new Nodule();
+		n.x = this.scaledWidth / 2;
+		n.y = this.scaledHeight / 2;
+		n.m = this.criticalMass;
+		n.vx = 0;
+		n.vy = 0;
+		this.nodes = new Array(n);
 	}
 	
 	public init() {
@@ -66,14 +67,14 @@ class SpaceController {
 		this.canvas.width = this.scaledWidth;
 		this.canvas.height = this.scaledHeight;
 		
-		this.nodes.length = this.nodeCount;
+		// this.nodes.length = 1;
 		
-		for (i = 0, len = this.nodes.length; i < len; i++) {
-			if (this.nodes[i]) {
-				continue;
-			}
-			this.nodes[i] = this.createNode();
-		}
+		// for (i = 0, len = this.nodes.length; i < len; i++) {
+		// 	if (this.nodes[i]) {
+		// 		continue;
+		// 	}
+		// 	this.nodes[i] = this.createNode();
+		// }
 		if (this.renderRequest) {
 			window.cancelAnimationFrame(this.renderRequest);
 		}
@@ -261,4 +262,11 @@ class SpaceController {
   		if (isVertical) degs = 90 - degs;
   		return degs / 90;
 	}
+}
+
+function NBodyController_main() {
+	var container:HTMLElement = document.getElementById('container'),
+		sc : NBodyController = new NBodyController(container);
+	sc.init();
+	window.addEventListener('resize', sc.init.bind(sc));
 }

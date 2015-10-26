@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "noImplicitAny": false,
+        "outDir": "public/lib/",
+        "rootDir": "scripts/",
+        "sourceMap": false
+    },
+    "filesGlob": [
+        "./scripts/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

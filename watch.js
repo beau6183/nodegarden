@@ -4,8 +4,7 @@ var cp = require('child_process')
 var chokidar = require('chokidar')
 
 watch('css/**/*.styl', 'npm run build-css')
-watch('scripts/index.js', 'npm run build-js')
-watch('scripts/index.ts', 'npm run build-ts')
+watch('scripts/*.ts', 'npm run build-ts')
 watch('views/**/*.jade', 'npm run build-html')
 
 function watch (path, cmd, cb) {

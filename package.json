@@ -2,14 +2,13 @@
   "name": "nodegarden",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "postinstall": "mkdir -p public/js public/css",
+    "postinstall": "mkdir -p public/lib public/css",
     "start": "node watch",
     "build-css": "stylus -c -u nib css/index.styl -o public/css/main.css",
-    "build-ts": "tsc -t ES5 -out scripts/index-2.js scripts/index.ts && rollup -f iife scripts/index-2.js | babel -o public/js/main-ts-dev.js && uglifyjs public/js/main-ts-dev.js -cmo public/js/main-ts.js && rm scripts/index-2.js",
-    "build-js": "rollup -f iife scripts/index.js | babel -o public/js/main-dev.js && uglifyjs public/js/main-dev.js -cmo public/js/main.js",
-    "build-html": "jade views/index.jade -o public/ && jade views/index-ts.jade -o public/"
+    "build-ts": "tsc",
+    "build-html": "jade views/*.jade -o public/"
   },
   "author": "",
   "license": "ISC",
