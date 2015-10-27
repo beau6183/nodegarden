@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "postinstall": "mkdir -p public/lib public/css",
+    "postinstall": "mkdir -p public/lib public/css; tsd install",
     "start": "node watch",
     "build-css": "stylus -c -u nib css/index.styl -o public/css/main.css",
-    "build-ts": "tsc",
+    "build-ts": "node ./build-ts.js",
     "build-html": "jade views/*.jade -o public/"
   },
   "author": "",
@@ -15,11 +15,12 @@
   "devDependencies": {
     "babel": "^5.8.23",
     "chokidar": "^1.2.0",
+    "fs-extra": "^0.26.0",
     "jade": "^1.11.0",
     "nib": "^1.1.0",
-    "rollup": "^0.19.1",
+    "ntypescript": "^1.201510260605.1",
     "stylus": "^0.52.4",
-    "tsc": "^1.20150623.0",
+    "tsd": "^0.6.5",
     "uglify-js": "^2.5.0"
   }
 }

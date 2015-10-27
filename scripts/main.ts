@@ -32,7 +32,7 @@ class SpaceController {
 	}
 	
 	public get nodeCount():number {
-		return Math.sqrt((this.scaledHeight * this.scaledWidth) / 72) | 0;
+		return Math.sqrt((this.scaledHeight * this.scaledWidth) / 72) / this.pixelRatio | 0;
 	}
 	
 	private nodes:Array<Nodule>;
@@ -47,14 +47,7 @@ class SpaceController {
 		this.canvas = document.createElement('canvas');
 		this.canvas.id = 'nodegarden';
 		this.ctx = this.canvas.getContext("2d");
-		
-		if (this.pixelRatio !== 1) {
-			// if retina screen, scale canvas
-			this.canvas.style.transform = 'scale(' + 1 / this.pixelRatio + ')';
-			this.canvas.style.transformOrigin = '0 0';
-		}
 		this.container.appendChild(this.canvas);
-		
 		this.nodes = new Array(this.nodeCount);
 	}
 	
@@ -67,6 +60,13 @@ class SpaceController {
 		this.canvas.height = this.scaledHeight;
 		
 		this.nodes.length = this.nodeCount;
+		console.log({nodes: this.nodeCount, pxr: this.pixelRatio});
+		
+		if (this.pixelRatio !== 1) {
+			// if retina screen, scale canvas
+			this.canvas.style.transform = 'scale(' + 1 / this.pixelRatio + ')';
+			this.canvas.style.transformOrigin = '0 0';
+		}
 		
 		for (i = 0, len = this.nodes.length; i < len; i++) {
 			if (this.nodes[i]) {
@@ -216,7 +216,7 @@ class SpaceController {
 			
 			this.ctx.beginPath();
 			this.ctx.fillStyle = 'rgba(' + Math.floor(255 * (node.m / this.criticalMass)) + ', 0, 0, 1)'; 
-			this.ctx.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
+			this.ctx.arc(node.x, node.y, node.radius * this.pixelRatio, 0, 2 * Math.PI);
 			this.ctx.fill();
 		
 			node.x += node.vx;
