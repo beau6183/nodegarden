@@ -2,10 +2,10 @@
 
 class NBodyController {
 	
-	public G:number = 6.67408e-5;
+	public G:number = 6.67408e-4; // Real gravitational constant = 6.67408e-11, too weak...
 	
 	public initialMass:number = 10;
-	public criticalMass:number = 1000000;
+	public criticalMass:number = 10000;
 	
 	public get windowArea():number {
 		return this.windowWidth * this.windowHeight;
@@ -43,12 +43,6 @@ class NBodyController {
 		this.canvas = document.createElement('canvas');
 		this.canvas.id = 'nodegarden';
 		this.ctx = this.canvas.getContext("2d");
-		
-		if (this.pixelRatio !== 1) {
-			// if retina screen, scale canvas
-			this.canvas.style.transform = 'scale(' + 1 / this.pixelRatio + ')';
-			this.canvas.style.transformOrigin = '0 0';
-		}
 		this.container.appendChild(this.canvas);
 		let n = new Nodule();
 		n.x = this.scaledWidth / 2;
@@ -60,25 +54,62 @@ class NBodyController {
 	}
 	
 	public init() {
-		// create nodes
-		let i:number, len:number;
-
 		// set canvas size
 		this.canvas.width = this.scaledWidth;
 		this.canvas.height = this.scaledHeight;
-		
-		// this.nodes.length = 1;
-		
-		// for (i = 0, len = this.nodes.length; i < len; i++) {
-		// 	if (this.nodes[i]) {
-		// 		continue;
-		// 	}
-		// 	this.nodes[i] = this.createNode();
-		// }
+		if (this.pixelRatio !== 1) {
+			// if retina screen, scale canvas
+			this.canvas.style.transform = 'scale(' + 1 / this.pixelRatio + ')';
+			this.canvas.style.transformOrigin = '0 0';
+		}
 		if (this.renderRequest) {
 			window.cancelAnimationFrame(this.renderRequest);
 		}
 		this.renderRequest = window.requestAnimationFrame(this.render.bind(this));
+		this.canvas.addEventListener('click', this.canvas_clickHandler.bind(this));
+	}
+	
+	private canvas_clickHandler(event:MouseEvent) {
+		if (this.nodes.length === 1) {
+			var r:number = this.nodes[0].radius;
+			var clickBox:Box = new Box(this.nodes[0].x - r, this.nodes[0].y - r, r * 2, r * 2);
+			if (clickBox.contains(event.clientX * this.pixelRatio, event.clientY * this.pixelRatio)) {
+				this.explode();
+			}
+		}
+	}
+	
+	private exploding:number = 0;
+	
+	private explode() {
+		var n:Nodule, r = this.nodes[0].radius,
+			rX:number, rY:number, rD:number, q:number, rQ:Point;
+		while (this.nodes[0].m > this.initialMass * 2) {
+			n = this.createNode();
+			rD = Math.random() * r;
+			rX = Math.sqrt(Math.pow(rD, 2) - Math.pow(Math.random() * rD, 2));
+			rY = Math.sqrt(Math.pow(rD, 2) - Math.pow(rX, 2));
+			q = Math.round(Math.random() * 3);
+			rQ = {x:1,y:1};
+			if (q === 0 || q === 3) rQ.x = -1;
+			if (q === 2 || q === 3) rQ.y = -1; 
+			n.x = this.nodes[0].x + (rX * rQ.x);
+			n.y = this.nodes[0].y + (rY * rQ.y);
+			n.vx = (rX * rQ.x);
+			n.vy = (rY * rQ.y);
+			n.m = this.initialMass;
+			// console.log({rD:rD, rX: rX, rY: rY, x:n.x,y:n.y});
+			if (n.m > this.nodes[0].m) {
+				n.m = this.initialMass;
+				this.nodes[0].m = this.initialMass;
+			}
+			else {
+				this.nodes[0].m -= this.initialMass;
+			}
+			this.nodes.push(n);
+		}
+		// console.log("Generating", this.nodes.length, "nodes");
+		this.exploding = 500;
 	}
 	
 	private createNode(n:Nodule = null):Nodule {
@@ -113,17 +144,23 @@ class NBodyController {
 			len:number,
 			nodeA:Nodule,
 			nodeB:Nodule,
-			node:Nodule;
+			node:Nodule,
+			vx:number,
+			vy:number;
 		
 		this.renderRequest = requestAnimationFrame(this.render.bind(this));
 		
 		// clear canvas
-		this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+		this.ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
 		this.ctx.fillRect(0, 0, this.scaledWidth, this.scaledHeight);
-		for (i = 0, len = this.nodes.length - 1; i < len; i++) {
-			for (j = i + 1; j < len + 1; j++) {
+		len = this.nodes.length;
+		if (this.exploding) this.exploding--;
+		for (i = 0; i < len; i++) {
+			for (j = len - 1; j > -1; j--) {
 				nodeA = this.nodes[i];
 				nodeB = this.nodes[j];
+				if (nodeA === nodeB || !nodeA || !nodeB) continue;
+				// console.log({count:this.nodes.length,i:i,j:j})
 			
 				deltaDistance = {
 					x: nodeB.x - nodeA.x,
@@ -133,39 +170,84 @@ class NBodyController {
 				distance = Math.sqrt(Math.pow(deltaDistance.x, 2) 
 								   + Math.pow(deltaDistance.y, 2));
 								   
-				if (distance < nodeA.radius + nodeB.radius) {
+				if (this.exploding === 0 && distance < nodeA.radius + nodeB.radius) {
 					// collision: remove smaller or equal
 					if (nodeA.m <= nodeB.m) {
-						nodeA.x = Math.random() * this.scaledWidth;
-						nodeA.y = Math.random() * this.scaledHeight;
+						vx = nodeA.vy * (nodeA.m / nodeB.m);
+						vy = nodeA.vy * (nodeA.m / nodeB.m);
+						if (nodeA.vx > 0 && nodeB.vx > 0) {
+							if (nodeA.vx > nodeB.vx) {
+								nodeB.vx += vx;
+							}
+						}
+						else if (nodeA.vx < 0 && nodeB.vx < 0) {
+							if (nodeA.vx < nodeB.vx) {
+								nodeB.vx += vx;
+							}
+						}
+						else {
+							nodeB.vx += vx;
+						}
 						
-						nodeB.vx += nodeA.vx * (nodeA.m / nodeB.m);
-						nodeB.vy += nodeA.vy * (nodeA.m / nodeB.m);
-						
-						nodeA.vx = Math.random() * 1 - 0.5;
-						nodeA.vy = Math.random() * 1 - 0.5;
-						
+						if (nodeA.vy > 0 && nodeB.vy > 0) {
+							if (nodeA.vy > nodeB.vy) {
+								nodeB.vy += vy;
+							}
+						}
+						else if (nodeA.vy < 0 && nodeB.vy < 0) {
+							if (nodeA.vy < nodeB.vy) {
+								nodeB.vy += vy;
+							}
+						}
+						else {
+							nodeB.vy += vy;
+						}
 						// Combine volumes
 						nodeB.m += nodeA.m;
-						if (nodeB.m > this.criticalMass) nodeB.m = this.initialMass;
-						nodeA.m = this.initialMass;
+						this.nodes.splice(i,1);
+						len = this.nodes.length;
+						j++;
+						continue;
 					}
 			
-					if (nodeB.m <= nodeA.m) {
-						nodeB.x = Math.random() * this.scaledWidth;
-						nodeB.y = Math.random() * this.scaledHeight;
+					if (nodeB.m < nodeA.m) {
+						vx = nodeB.vx * (nodeB.m / nodeA.m);
+						vy = nodeB.vy * (nodeB.m / nodeA.m);
+						if (nodeB.vx > 0 && nodeA.vx > 0) {
+							if (nodeB.vx > nodeA.vx) {
+								nodeA.vx += vx;
+							}
+						}
+						else if (nodeB.vx < 0 && nodeA.vx < 0) {
+							if (nodeB.vx < nodeA.vx) {
+								nodeA.vx += vx;
+							}
+						}
+						else {
+							nodeA.vx += vx;
+						}
 						
-						nodeA.vx += nodeB.vx * (nodeB.m / nodeA.m);
-						nodeA.vy += nodeB.vy * (nodeB.m / nodeA.m);
+						if (nodeB.vy > 0 && nodeA.vy > 0) {
+							if (nodeB.vy > nodeA.vy) {
+								nodeA.vy += vy;
+							}
+						}
+						else if (nodeB.vy < 0 && nodeA.vy < 0) {
+							if (nodeB.vy < nodeA.vy) {
+								nodeA.vy += vy;
+							}
+						}
+						else {
+							nodeA.vy += vy;
+						}
 						
-						nodeB.vx = Math.random() * 1 - 0.5;
-						nodeB.vy = Math.random() * 1 - 0.5;
 						// Combine volumes
 						nodeA.m += nodeB.m;
-						if (nodeA.m > this.criticalMass) nodeA.m = this.initialMass;
-						nodeB.m = this.initialMass;
+						this.nodes.splice(j,1);
+						len = this.nodes.length;
+						i--;
+						continue;
 					}
-					continue;
 				}
 				
 				// maxDistance = radA * 5 + radB * 5
@@ -216,40 +298,41 @@ class NBodyController {
 			node = this.nodes[i];
 			
 			this.ctx.beginPath();
-			this.ctx.fillStyle = 'rgba(' + Math.floor(255 * (node.m / this.criticalMass)) + ', 0, 0, 1)'; 
+			this.ctx.fillStyle = 'rgba(' + (255 - Math.floor(255 * (node.m / this.criticalMass))) + ', 255, 255, 1)'; 
 			this.ctx.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
 			this.ctx.fill();
 		
 			node.x += node.vx;
 			node.y += node.vy;
+			let r = node.radius;
 			
-			if (node.x <= 0) {
+			if (node.x - r <= 0) {
 				impactAngle = this.impactLoss(node.vx, node.vy, true);
-				vLoss = 1 - (0.5 * impactAngle);
-				node.x = 0;
+				vLoss = 1 - impactAngle;
+				node.x = r;
 				node.vx *= -vLoss;
 				node.vy *= vLoss;
 				node.y += node.vy;
-			} else if (node.x >= this.scaledWidth) {
+			} else if (node.x + r >= this.scaledWidth) {
 				impactAngle = this.impactLoss(node.vx, node.vy, true);
-				vLoss = 1 - (0.5 * impactAngle);
-				node.x = this.scaledWidth;
+				vLoss = 1 - impactAngle;
+				node.x = this.scaledWidth - r;
 				node.vx *= -vLoss;
 				node.vy *= vLoss;
 				node.y += node.vy;
 			}
 			
-			if (node.y <= 0) {
+			if (node.y - r <= 0) {
 				impactAngle = this.impactLoss(node.vx, node.vy, false);
-				vLoss = 1 - (0.5 * impactAngle);
-				node.y = 0;
+				vLoss = 1 - impactAngle;
+				node.y = r;
 				node.vy *= -vLoss;
 				node.vx *= vLoss;
 				node.x += node.vx;
-			} else if (node.y >= this.scaledHeight) {
+			} else if (node.y + r >= this.scaledHeight) {
 				impactAngle = this.impactLoss(node.vx, node.vy, false);
-				vLoss = 1 - (0.5 * impactAngle);
-				node.y = this.scaledHeight;
+				vLoss = 1 - impactAngle;
+				node.y = this.scaledHeight - r;
 				node.vy *= -vLoss;
 				node.vx *= vLoss;
 				node.x += node.vx;

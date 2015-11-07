@@ -13,6 +13,19 @@ interface Container extends Point {
 	h: number;
 }
 
+class Box {
+	constructor (
+		public x:number,
+		public y:number,
+		public w:number,
+		public h:number
+	){}
+	public contains(x:number, y:number):boolean {
+		return this.x <= x && x <= this.x + this.w
+			&& this.y <= y && y <= this.y + this.h;
+	}
+}
+
 class Nodule {
 	
 	private _radius:number = 0;

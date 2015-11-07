@@ -2,7 +2,7 @@
 
 class SpaceController {
 	
-	public G:number = 6.67408e-5;
+	public G:number = 6.67408e-3;
 	
 	public initialMass:number = 10;
 	public criticalMass:number = 10000;
