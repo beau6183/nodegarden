@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "postinstall": "mkdir -p public/lib public/css; tsd install",
+    "postinstall": "mkdir -p public/lib public/css && tsd install && npm run-script build-css && npm run-script build-ts && npm run-script build-html",
     "start": "node watch",
     "build-css": "stylus -c -u nib css/index.styl -o public/css/main.css",
     "build-ts": "node ./build-ts.js",
