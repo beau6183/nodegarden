@@ -4,7 +4,7 @@ class NBodyController {
 	
 	public G:number = 6.67408e-4; // Real gravitational constant = 6.67408e-11, too weak...
 	
-    public initialMass:number = 1000;
+    public initialMass:number = 100;
 	public criticalMass:number = 10000;
 	
 	public get windowArea():number {
@@ -147,7 +147,7 @@ class NBodyController {
 			node:Nodule,
 			vx:number,
 			vy:number,
-            clearCanvas:number = 0,
+            clearCanvas:number = 0.1,
             rebound = true,
             slowDown = true;
 		
@@ -275,10 +275,14 @@ class NBodyController {
 				// 	force = 0.025
 				// }
 				
-				if (gForce * 40 >= 0.01) {
+                let ca:number = gForce * 40;
+				if (ca * 40 >= 0.01) {
 				  // draw gravity lines
+                  let cr:number = Math.round(Math.random() * 255),
+                      cg:number = Math.round(Math.random() * 255),
+                      cb:number = Math.round(Math.random() * 255);
 				  this.ctx.beginPath();
-				  this.ctx.strokeStyle = 'rgba(255,255,255,' + gForce * 40 + ')';
+				  this.ctx.strokeStyle = 'rgba(' + [cr,cg,cb,ca].join(", ") + ')';
 				  this.ctx.moveTo(nodeA.x, nodeA.y);
 				  this.ctx.lineTo(nodeB.x, nodeB.y);
 				  this.ctx.stroke();
