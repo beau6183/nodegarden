@@ -132,21 +132,23 @@ class NBodyController {
 	}
 	
     private computeVelocities(nodeA:Nodule,nodeB:Nodule) {
-      let pdx = (nodeB.x - nodeA.x)
-      let pdy = (nodeB.y - nodeA.y)
-      let d = pdx*pdx + pdy*pdy
-      let m = (nodeA.m*2)/(nodeB.m+nodeA.m)
-              
-      let vx = nodeB.vx - m * (((nodeB.vx - nodeA.vx) * pdx)/d) * pdx
-      let vy = nodeB.vy - m * (((nodeB.vy - nodeA.vy) * pdy)/d) * pdy
+
+      let pdx = (nodeA.x - nodeB.x),
+          pdy = (nodeA.y - nodeB.y),
+          phi = Math.atan2(pdy, pdx) * 180 * Math.PI,
+          m1 = nodeA.m,
+          m2 = nodeB.m,
+          theta1 = Math.atan2(nodeA.vx,nodeA.vy) * 180 * Math.PI,
+          theta2 = Math.atan2(nodeB.vx,nodeB.vy) * 180 * Math.PI
+          
       return {
-          nodeB: {
-            vx:nodeB.vx - m * (((nodeB.vx - nodeA.vx) * pdx)/d) * pdx,
-            vy:nodeB.vy - m * (((nodeB.vy - nodeA.vy) * pdy)/d) * pdy
-          },
           nodeA: {
-            vx:nodeA.vx - m * (((nodeA.vx - nodeB.vx) * pdx)/d) * pdx,
-            vy:nodeA.vy - m * (((nodeA.vy - nodeB.vy) * pdy)/d) * pdy
+              vx: (nodeB.vx * Math.cos(theta2 - phi)*(m1 - m1) + 2*m1*nodeA.vx*Math.cos(theta1 - phi))/(m1+m2) * Math.cos(phi) + nodeB.vx * Math.sin(theta2-phi)*Math.cos(phi+Math.PI/2), 
+              vy: (nodeB.vy * Math.cos(theta2 - phi)*(m2 - m1) + 2*m1*nodeA.vy*Math.cos(theta1 - phi))/(m1+m2) * Math.sin(phi) + nodeB.vx * Math.sin(theta2-phi)*Math.sin(phi+Math.PI/2) 
+          },
+          nodeB: {
+              vx: (nodeA.vx * Math.cos(theta1 - phi)*(m1 - m2) + 2*m2*nodeB.vx*Math.cos(theta2 - phi))/(m1+m2) * Math.cos(phi) + nodeA.vx * Math.sin(theta1-phi)*Math.cos(phi+Math.PI/2), 
+              vy: (nodeA.vy * Math.cos(theta1 - phi)*(m1 - m2) + 2*m2*nodeB.vy*Math.cos(theta2 - phi))/(m1+m2) * Math.sin(phi) + nodeA.vx * Math.sin(theta1-phi)*Math.sin(phi+Math.PI/2) 
           }
         }
     }
@@ -167,7 +169,7 @@ class NBodyController {
 			node:Nodule,
 			vx:number,
 			vy:number,
-            clearCanvas:number = 1,
+            clearCanvas:number = .1,
             rebound = true,
             slowDown = true;
 		
@@ -207,9 +209,7 @@ class NBodyController {
 						len = this.nodes.length;
 						j++;
 						continue;
-					}
-			
-					if (nodeB.m < nodeA.m) {
+					} else {
                         nodeA.vx = v.nodeB.vx + v.nodeA.vx
                         nodeA.vy = v.nodeB.vy + v.nodeA.vy
                         
