@@ -1,7 +1,12 @@
-
-var cp = require('child_process')
-
-var chokidar = require('chokidar')
+/// <reference path="typings/tsd.d.ts" />
+var cp = require('child_process'),
+    chokidar = require('chokidar'),
+    connect = require('connect'),
+    path = require('path'),
+    serveStatic = require('serve-static');
+    
+connect().use(serveStatic(path.resolve(__dirname, 'public'))).listen(8080);
+console.log("Webserver up at localhost:8080");
 
 watch('css/**/*.styl', 'npm run build-css')
 watch('scripts/*.ts', 'npm run build-ts')

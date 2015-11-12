@@ -6,7 +6,10 @@
   "bundle": "typings/tsd.d.ts",
   "installed": {
     "node/node.d.ts": {
-      "commit": "a9ded5b70ede34486731ef6c2e6865f5e9911fc3"
+      "commit": "708609e0764daeb5eb64104af7aca50c520c4e6e"
+    },
+    "chokidar/chokidar.d.ts": {
+      "commit": "708609e0764daeb5eb64104af7aca50c520c4e6e"
     }
   }
 }
