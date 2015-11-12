@@ -4,7 +4,7 @@ class NBodyController {
 	
 	public G:number = 6.67408e-4; // Real gravitational constant = 6.67408e-11, too weak...
 	
-	public initialMass:number = 100;
+    public initialMass:number = 1000;
 	public criticalMass:number = 10000;
 	
 	public get windowArea():number {
@@ -95,8 +95,8 @@ class NBodyController {
 			if (q === 2 || q === 3) rQ.y = -1; 
 			n.x = this.nodes[0].x + (rX * rQ.x);
 			n.y = this.nodes[0].y + (rY * rQ.y);
-			n.vx = (rX * rQ.x);
-			n.vy = (rY * rQ.y);
+            n.vx = ((Math.random() * 4 - 2) * rX * rQ.x)/50;
+            n.vy = ((Math.random() * 4 - 2) * rY * rQ.y)/50;
 			n.m = this.initialMass;
 			// console.log({rD:rD, rX: rX, rY: rY, x:n.x,y:n.y});
 			if (n.m > this.nodes[0].m) {
@@ -109,7 +109,7 @@ class NBodyController {
 			this.nodes.push(n);
 		}
 		// console.log("Generating", this.nodes.length, "nodes");
-		this.exploding = 500;
+               this.exploding = 20;
 	}
 	
 	private createNode(n:Nodule = null):Nodule {
@@ -117,15 +117,15 @@ class NBodyController {
 			n = new Nodule(
 				Math.random() * this.scaledWidth,
 				Math.random() * this.scaledHeight,
-				Math.random() * 1 - 0.5,
-				Math.random() * 1 - 0.5,
+                               Math.random() * 4 - 2,
+                               Math.random() * 4 - 2,
 				this.initialMass
 			);
 		} else {
 			n.x = Math.random() * this.scaledWidth;
 			n.y = Math.random() * this.scaledHeight;
-			n.vx = Math.random() * 1 - 0.5;
-			n.vy = Math.random() * 1 - 0.5;
+                       n.vx = Math.random() * 4 - 2;
+                       n.vy = Math.random() * 4 - 2;
 			n.m = this.initialMass;
 		}
 		return n;
@@ -146,14 +146,17 @@ class NBodyController {
 			nodeB:Nodule,
 			node:Nodule,
 			vx:number,
-			vy:number;
+			vy:number,
+            clearCanvas:number = 0,
+            rebound = true,
+            slowDown = true;
 		
 		this.renderRequest = requestAnimationFrame(this.render.bind(this));
 		
 		// clear canvas
-		// this.ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-		// this.ctx.fillRect(0, 0, this.scaledWidth, this.scaledHeight);
-        
+		this.ctx.fillStyle = 'rgba(0, 0, 0, ' + clearCanvas + ')';
+		this.ctx.fillRect(0, 0, this.scaledWidth, this.scaledHeight);
+
 		len = this.nodes.length;
 		if (this.exploding) this.exploding--;
 		for (i = 0; i < len; i++) {
@@ -299,24 +302,23 @@ class NBodyController {
 			node = this.nodes[i];
 			
 			this.ctx.beginPath();
-			this.ctx.fillStyle = 'rgba(' + (255 - Math.floor(255 * (node.m / this.criticalMass))) + ', 255, 255, 0.025)'; 
+			this.ctx.fillStyle = 'rgba(' + (255 - Math.floor(255 * (node.m / this.criticalMass))) + ', 255, 255, 1)'; 
 			this.ctx.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
 			this.ctx.fill();
 		
 			node.x += node.vx;
 			node.y += node.vy;
-			let r = node.radius,
-                rebound = true;
+			let r = node.radius;
                         
             if (node.x - r <= 0) {
                 impactAngle = this.impactLoss(node.vx, node.vy, true);
-                vLoss = 1 - impactAngle;
+                vLoss = slowDown ? 1 - impactAngle : 1;
                 node.x = rebound ? r : this.scaledWidth - r;
                 node.vx *= rebound?-vLoss:vLoss;
                 node.vy *= vLoss;
             } else if (node.x + r >= this.scaledWidth) {
                 impactAngle = this.impactLoss(node.vx, node.vy, true);
-                vLoss = 1 - impactAngle;
+                vLoss = slowDown ? 1 - impactAngle : 1;
                 node.x = rebound ? this.scaledWidth - r : r;
                 node.vx *= rebound?-vLoss:vLoss;
                 node.vy *= vLoss;
@@ -324,13 +326,13 @@ class NBodyController {
             
             if (node.y - r <= 0) {
                 impactAngle = this.impactLoss(node.vx, node.vy, false);
-                vLoss = 1 - impactAngle;
+                vLoss = slowDown ? 1 - impactAngle : 1;
                 node.y = rebound ? r : this.scaledHeight - r;
                 node.vy *= rebound? -vLoss : vLoss;
                 node.vx *= vLoss;
             } else if (node.y + r >= this.scaledHeight) {
                 impactAngle = this.impactLoss(node.vx, node.vy, false);
-                vLoss = 1 - impactAngle;
+                vLoss = slowDown ? 1 - impactAngle : 1;
                 node.y = rebound ? this.scaledHeight - r : r;
                 node.vy *= rebound ? -vLoss : vLoss;
                 node.vx *= vLoss;
@@ -343,11 +345,4 @@ class NBodyController {
   		if (isVertical) degs = 90 - degs;
   		return degs / 90;
 	}
-}
-
-function NBodyController_main() {
-	var container:HTMLElement = document.getElementById('container'),
-		sc : NBodyController = new NBodyController(container);
-	sc.init();
-	window.addEventListener('resize', sc.init.bind(sc));
 }
