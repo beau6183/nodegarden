@@ -304,39 +304,36 @@ class NBodyController {
 		
 			node.x += node.vx;
 			node.y += node.vy;
-			let r = node.radius;
-			
-			if (node.x - r <= 0) {
-				impactAngle = this.impactLoss(node.vx, node.vy, true);
-				vLoss = 1 - impactAngle;
-				node.x = r;
-				node.vx *= -vLoss;
-				node.vy *= vLoss;
-				node.y += node.vy;
-			} else if (node.x + r >= this.scaledWidth) {
-				impactAngle = this.impactLoss(node.vx, node.vy, true);
-				vLoss = 1 - impactAngle;
-				node.x = this.scaledWidth - r;
-				node.vx *= -vLoss;
-				node.vy *= vLoss;
-				node.y += node.vy;
-			}
-			
-			if (node.y - r <= 0) {
-				impactAngle = this.impactLoss(node.vx, node.vy, false);
-				vLoss = 1 - impactAngle;
-				node.y = r;
-				node.vy *= -vLoss;
-				node.vx *= vLoss;
-				node.x += node.vx;
-			} else if (node.y + r >= this.scaledHeight) {
-				impactAngle = this.impactLoss(node.vx, node.vy, false);
-				vLoss = 1 - impactAngle;
-				node.y = this.scaledHeight - r;
-				node.vy *= -vLoss;
-				node.vx *= vLoss;
-				node.x += node.vx;
-			}
+			let r = node.radius,
+                rebound = false
+                        
+            if (node.x - r <= 0) {
+                impactAngle = this.impactLoss(node.vx, node.vy, true);
+                vLoss = 1 - impactAngle;
+                node.x = rebound ? r : this.scaledWidth - r;
+                node.vx *= rebound?-vLoss:vLoss;
+                node.vy *= vLoss;
+            } else if (node.x + r >= this.scaledWidth) {
+                impactAngle = this.impactLoss(node.vx, node.vy, true);
+                vLoss = 1 - impactAngle;
+                node.x = rebound ? this.scaledWidth - r : r;
+                node.vx *= rebound?-vLoss:vLoss;
+                node.vy *= vLoss;
+            }
+            
+            if (node.y - r <= 0) {
+                impactAngle = this.impactLoss(node.vx, node.vy, false);
+                vLoss = 1 - impactAngle;
+                node.y = rebound ? r : this.scaledHeight - r;
+                node.vy *= rebound? -vLoss : vLoss;
+                node.vx *= vLoss;
+            } else if (node.y + r >= this.scaledHeight) {
+                impactAngle = this.impactLoss(node.vx, node.vy, false);
+                vLoss = 1 - impactAngle;
+                node.y = rebound ? this.scaledHeight - r : r;
+                node.vy *= rebound ? -vLoss : vLoss;
+                node.vx *= vLoss;
+            }
 		}
 	}
 	
