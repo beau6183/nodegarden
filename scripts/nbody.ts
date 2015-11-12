@@ -131,6 +131,26 @@ class NBodyController {
 		return n;
 	}
 	
+    private computeVelocities(nodeA:Nodule,nodeB:Nodule) {
+      let pdx = (nodeB.x - nodeA.x)
+      let pdy = (nodeB.y - nodeA.y)
+      let d = pdx*pdx + pdy*pdy
+      let m = (nodeA.m*2)/(nodeB.m+nodeA.m)
+              
+      let vx = nodeB.vx - m * (((nodeB.vx - nodeA.vx) * pdx)/d) * pdx
+      let vy = nodeB.vy - m * (((nodeB.vy - nodeA.vy) * pdy)/d) * pdy
+      return {
+          nodeB: {
+            vx:nodeB.vx - m * (((nodeB.vx - nodeA.vx) * pdx)/d) * pdx,
+            vy:nodeB.vy - m * (((nodeB.vy - nodeA.vy) * pdy)/d) * pdy
+          },
+          nodeA: {
+            vx:nodeA.vx - m * (((nodeA.vx - nodeB.vx) * pdx)/d) * pdx,
+            vy:nodeA.vy - m * (((nodeA.vy - nodeB.vy) * pdy)/d) * pdy
+          }
+        }
+    }
+    
 	public render() {
 		let distance:number,
 			impactAngle:number,
@@ -147,7 +167,7 @@ class NBodyController {
 			node:Nodule,
 			vx:number,
 			vy:number,
-            clearCanvas:number = 0.1,
+            clearCanvas:number = 1,
             rebound = true,
             slowDown = true;
 		
@@ -176,36 +196,11 @@ class NBodyController {
 								   
 				if (this.exploding === 0 && distance < nodeA.radius + nodeB.radius) {
 					// collision: remove smaller or equal
+                    let v = this.computeVelocities(nodeA, nodeB)
 					if (nodeA.m <= nodeB.m) {
-						vx = nodeA.vy * (nodeA.m / nodeB.m);
-						vy = nodeA.vy * (nodeA.m / nodeB.m);
-						if (nodeA.vx > 0 && nodeB.vx > 0) {
-							if (nodeA.vx > nodeB.vx) {
-								nodeB.vx += vx;
-							}
-						}
-						else if (nodeA.vx < 0 && nodeB.vx < 0) {
-							if (nodeA.vx < nodeB.vx) {
-								nodeB.vx += vx;
-							}
-						}
-						else {
-							nodeB.vx += vx;
-						}
-						
-						if (nodeA.vy > 0 && nodeB.vy > 0) {
-							if (nodeA.vy > nodeB.vy) {
-								nodeB.vy += vy;
-							}
-						}
-						else if (nodeA.vy < 0 && nodeB.vy < 0) {
-							if (nodeA.vy < nodeB.vy) {
-								nodeB.vy += vy;
-							}
-						}
-						else {
-							nodeB.vy += vy;
-						}
+                        nodeB.vx = v.nodeB.vx + v.nodeA.vx
+                        nodeB.vy = v.nodeB.vy + v.nodeA.vy
+
 						// Combine volumes
 						nodeB.m += nodeA.m;
 						this.nodes.splice(i,1);
@@ -215,36 +210,9 @@ class NBodyController {
 					}
 			
 					if (nodeB.m < nodeA.m) {
-						vx = nodeB.vx * (nodeB.m / nodeA.m);
-						vy = nodeB.vy * (nodeB.m / nodeA.m);
-						if (nodeB.vx > 0 && nodeA.vx > 0) {
-							if (nodeB.vx > nodeA.vx) {
-								nodeA.vx += vx;
-							}
-						}
-						else if (nodeB.vx < 0 && nodeA.vx < 0) {
-							if (nodeB.vx < nodeA.vx) {
-								nodeA.vx += vx;
-							}
-						}
-						else {
-							nodeA.vx += vx;
-						}
-						
-						if (nodeB.vy > 0 && nodeA.vy > 0) {
-							if (nodeB.vy > nodeA.vy) {
-								nodeA.vy += vy;
-							}
-						}
-						else if (nodeB.vy < 0 && nodeA.vy < 0) {
-							if (nodeB.vy < nodeA.vy) {
-								nodeA.vy += vy;
-							}
-						}
-						else {
-							nodeA.vy += vy;
-						}
-						
+                        nodeA.vx = v.nodeB.vx + v.nodeA.vx
+                        nodeA.vy = v.nodeB.vy + v.nodeA.vy
+                        
 						// Combine volumes
 						nodeA.m += nodeB.m;
 						this.nodes.splice(j,1);
