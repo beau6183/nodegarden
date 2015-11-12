@@ -4,7 +4,7 @@ class NBodyController {
 	
 	public G:number = 6.67408e-4; // Real gravitational constant = 6.67408e-11, too weak...
 	
-	public initialMass:number = 10;
+	public initialMass:number = 100;
 	public criticalMass:number = 10000;
 	
 	public get windowArea():number {
@@ -151,8 +151,9 @@ class NBodyController {
 		this.renderRequest = requestAnimationFrame(this.render.bind(this));
 		
 		// clear canvas
-		this.ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-		this.ctx.fillRect(0, 0, this.scaledWidth, this.scaledHeight);
+		// this.ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+		// this.ctx.fillRect(0, 0, this.scaledWidth, this.scaledHeight);
+        
 		len = this.nodes.length;
 		if (this.exploding) this.exploding--;
 		for (i = 0; i < len; i++) {
@@ -271,14 +272,14 @@ class NBodyController {
 				// 	force = 0.025
 				// }
 				
-				// if (gForce * 40 >= 0.01) {
-				//   // draw gravity lines
-				//   this.ctx.beginPath();
-				//   this.ctx.strokeStyle = 'rgba(0,0,0,' + gForce * 40 + ')';
-				//   this.ctx.moveTo(nodeA.x, nodeA.y);
-				//   this.ctx.lineTo(nodeB.x, nodeB.y);
-				//   this.ctx.stroke();
-				// }
+				if (gForce * 40 >= 0.01) {
+				  // draw gravity lines
+				  this.ctx.beginPath();
+				  this.ctx.strokeStyle = 'rgba(255,255,255,' + gForce * 40 + ')';
+				  this.ctx.moveTo(nodeA.x, nodeA.y);
+				  this.ctx.lineTo(nodeB.x, nodeB.y);
+				  this.ctx.stroke();
+				}
 				
 				force = {
 					x: gForce * direction.x,
@@ -298,14 +299,14 @@ class NBodyController {
 			node = this.nodes[i];
 			
 			this.ctx.beginPath();
-			this.ctx.fillStyle = 'rgba(' + (255 - Math.floor(255 * (node.m / this.criticalMass))) + ', 255, 255, 1)'; 
+			this.ctx.fillStyle = 'rgba(' + (255 - Math.floor(255 * (node.m / this.criticalMass))) + ', 255, 255, 0.025)'; 
 			this.ctx.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
 			this.ctx.fill();
 		
 			node.x += node.vx;
 			node.y += node.vy;
 			let r = node.radius,
-                rebound = false
+                rebound = true;
                         
             if (node.x - r <= 0) {
                 impactAngle = this.impactLoss(node.vx, node.vy, true);
